@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: pip install matplotlib numpy pytest pytest-cov
 
+      - name: Build (byte-compile all Python files)
+        run: python -m compileall -q .
+
       - name: Run tests with coverage
         env:
           MPLBACKEND: Agg   # no display on the runner
