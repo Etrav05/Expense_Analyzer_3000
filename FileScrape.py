@@ -73,7 +73,8 @@ def vendor_finder(description):
     # Keep words that start with uppercase (allows "Garrison Brewin")
     vendor = ' '.join([word for word in vendor.split() if word and word[0].isupper()])
 
-    vendor = re.sub(r'\s*[#C]\d*$', '', vendor)  # Find common patterns with trailing symbols and numbers
+    # strip trailing store number (#123 / C123), then trailing spaces
+    vendor = re.sub(r'(?:#\d*|C\d+)$', '', vendor).rstrip()
     vendor = vendor.strip()
 
     return vendor if vendor else "UNKNOWN"
