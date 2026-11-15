@@ -1,32 +1,36 @@
-name: SonarQube
+name: SonarQube Cloud
+
 on:
   push:
-    branches:
-      - master
-  pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  build:
-    name: Build and analyze
-    runs-on: windows-latest
+  test-and-scan:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Check out repository
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      # This step should build, test and generate coverage reports
-      # - name: Build and test
-      #   run: <build + test + generate coverage reports>
-      - name: Cache SonarQube packages
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          fetch-depth: 0   # full history so Sonar can tell new vs overall code
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: SonarQube Scan
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: pip install matplotlib numpy pytest pytest-cov
+
+      - name: Run tests with coverage
+        env:
+          MPLBACKEND: Agg   # no display on the runner
+        run: pytest --cov=. --cov-report=xml || [ $? -eq 5 ]
+
+      - name: SonarQube Cloud scan
         uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.organization=etrav05
-            -Dsonar.projectKey=Etrav05_Expense_Analyzer_3000
