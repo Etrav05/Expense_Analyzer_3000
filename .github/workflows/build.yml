@@ -41,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pyinstaller matplotlib numpy
+          pip install --only-binary :all: -r requirements.txt
 
       - name: Build app
         run: pyinstaller --onefile --windowed GUI.py --name ExpenseAnalyzer3000
