@@ -1,32 +1,56 @@
-name: SonarQube
+name: Build Executables
+
 on:
   push:
-    branches:
-      - master
-  pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ main ]
+  workflow_dispatch:
+
 jobs:
-  build:
-    name: Build and analyze
+  build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      # This step should build, test and generate coverage reports
-      # - name: Build and test
-      #   run: <build + test + generate coverage reports>
-      - name: Cache SonarQube packages
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller matplotlib numpy
+
+      - name: Build exe
+        run: pyinstaller ExpenseAnalyzer3000.spec
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v4
         with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          name: ExpenseAnalyzer3000-Windows
+          path: dist/ExpenseAnalyzer3000.exe
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          args: >
-            -Dsonar.organization=etrav05
-            -Dsonar.projectKey=Etrav05_Expense_Analyzer_3000
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller matplotlib numpy
+
+      - name: Build app
+        run: pyinstaller --onefile --windowed GUI.py --name ExpenseAnalyzer3000
+
+      - name: Zip the app
+        run: zip -r ExpenseAnalyzer3000-Mac.zip dist/ExpenseAnalyzer3000.app
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExpenseAnalyzer3000-Mac
+          path: ExpenseAnalyzer3000-Mac.zip
